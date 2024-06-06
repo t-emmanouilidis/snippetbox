@@ -1,6 +1,8 @@
 CREATE
 DATABASE snippetbox CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+USE snippetbox;
+
 create table snippets
 (
     id      INTEGER      NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -31,9 +33,16 @@ VALUES ('First autumn morning',
         UTC_TIMESTAMP(),
         DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY));
 
+CREATE user web identified by 'pass';
 
-Create user web identified by 'pass';
+Grant select, insert, update, delete on snippetbox.* to web;
 
-grant select, insert, update, delete on snippetbox.* to web;
+Select * from snippets;
 
-select * from snippets;
+CREATE table sessions (
+        token CHAR(43) PRIMARY KEY,
+        data BLOB NOT NULL,
+        expiry TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX sessions_expiry_idx ON sessions(expiry);
