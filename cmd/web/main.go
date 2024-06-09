@@ -25,7 +25,8 @@ type config struct {
 
 type application struct {
 	logger         *slog.Logger
-	snippets       *models.SnippetModel
+	snippets       models.SnippetModelInterface
+	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -64,6 +65,8 @@ func main() {
 	formDecoder := form.NewDecoder()
 
 	sessionManager := scs.New()
+	// strict policy - block session cookie even for get, head requests
+	sessionManager.Cookie.SameSite = http.SameSiteStrictMode
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
@@ -71,6 +74,7 @@ func main() {
 	app := &application{
 		logger:         logger,
 		snippets:       &models.SnippetModel{DB: db},
+		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
@@ -78,6 +82,7 @@ func main() {
 
 	var tlsConfig *tls.Config = &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+		MinVersion:       tls.VersionTLS13,
 	}
 
 	srv := &http.Server{
